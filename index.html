@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main>
+        <!-- Dashboard Section -->
+        <section>
+            <div id="total-balance">Total Balance: ₹0.00</div>
+            <div id="total-income">Total Income: ₹0.00</div>
+            <div id="total-expense">Total Expenses: ₹0.00</div>
+        </section>
+
+        <!-- Entry Form -->
+        <form id="transaction-form">
+            <input type="text" id="text" placeholder="Transaction Name" required>
+            <input type="number" id="amount" placeholder="Amount" step="0.01" required>
+            <select id="type" required>
+                <option value="income">income</option>
+                <option value="expense">expense</option>
+            </select>
+            <button type="submit">Add Transaction</button>
+        </form>
+
+        <!-- Transaction List -->
+        <ul id="transaction-list"></ul>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
