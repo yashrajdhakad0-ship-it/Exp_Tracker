@@ -8,6 +8,11 @@ body {
     padding: 40px 20px;
 }
 
+h1{
+    text-align: center;
+    color: #f87171;
+}
+
 main {
     width: 100%;
     max-width: 400px;
