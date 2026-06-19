@@ -1,97 +1,107 @@
-// Select DOM Elements using specific IDs
 const balanceEl = document.getElementById('total-balance');
 const incomeEl = document.getElementById('total-income');
 const expenseEl = document.getElementById('total-expense');
 const formEl = document.getElementById('transaction-form');
+const submitBtn = document.getElementById('submit-btn');
 const listEl = document.getElementById('transaction-list');
 const textInput = document.getElementById('text');
 const amountInput = document.getElementById('amount');
 const typeInput = document.getElementById('type');
 
-// Load transactions from localStorage or fall back to mock data
+let editId = null;
+
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [
     { id: 1, name: 'Salary', amount: 3000, type: 'income' },
     { id: 2, name: 'Rent', amount: 800, type: 'expense' }
 ];
 
-// Helper function to save transactions list to localStorage
 function saveToLocalStorage() {
     localStorage.setItem('transactions', JSON.stringify(transactions));
 }
 
-// Update dashboard figures, build transaction logs, and sync localStorage
 function updateDOM() {
     listEl.innerHTML = '';
     
-    let balance = 0;
-    let income = 0;
-    let expense = 0;
+    const income = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + t.amount, 0);
 
-    // Loop through transactions to build list items and sum totals
+    const expense = transactions
+        .filter(t => t.type === 'expense')
+        .reduce((sum, t) => sum + t.amount, 0);
+
+    const balance = income - expense;
+
     transactions.forEach(transaction => {
         const isIncome = transaction.type === 'income';
-
-        if (isIncome) {
-            income += transaction.amount;
-            balance += transaction.amount;
-        } else {
-            expense += transaction.amount;
-            balance -= transaction.amount;
-        }
-
-        // Create list item
         const li = document.createElement('li');
         li.className = isIncome ? 'income-item' : 'expense-item';
         
         li.innerHTML = `
             <span>${transaction.name}</span>
             <span>${isIncome ? '+' : '-'}₹${transaction.amount.toFixed(2)}</span>
-            <button onclick="deleteTransaction(${transaction.id})">Delete</button>
+            <div>
+                <button onclick="editTransaction(${transaction.id})">Edit</button>
+                <button onclick="deleteTransaction(${transaction.id})">Delete</button>
+            </div>
         `;
         listEl.appendChild(li);
     });
 
-    // Handle styling for negative values in the balance display
     const formattedBalance = balance >= 0 ? `₹${balance.toFixed(2)}` : `-₹${Math.abs(balance).toFixed(2)}`;
 
-    // Write text directly to the DOM elements containing labels
     balanceEl.textContent = `Total Balance: ${formattedBalance}`;
     incomeEl.textContent = `Total Income: ₹${income.toFixed(2)}`;
     expenseEl.textContent = `Total Expenses: ₹${expense.toFixed(2)}`;
 
-    // Save current state of transactions
     saveToLocalStorage();
 }
 
-// Add a transaction from form input values
-function addTransaction(e) {
+function handleFormSubmit(e) {
     e.preventDefault();
 
     const name = textInput.value;
     const amount = parseFloat(amountInput.value);
     const type = typeInput.value;
 
-    const newTransaction = {
-        id: Date.now(),
-        name: name,
-        amount: amount,
-        type: type
-    };
+    if (editId) {
+        transactions = transactions.map(t => 
+            t.id === editId ? { ...t, name, amount, type } : t
+        );
+        editId = null;
+        submitBtn.textContent = 'Add Transaction';
+    } else {
+        transactions.push({ id: Date.now(), name, amount, type });
+    }
 
-    transactions.push(newTransaction);
     updateDOM();
     formEl.reset();
 }
 
-// Delete transaction helper
+function editTransaction(id) {
+    const target = transactions.find(t => t.id === id);
+    if (!target) return;
+
+    textInput.value = target.name;
+    amountInput.value = target.amount;
+    typeInput.value = target.type;
+
+    editId = id;
+    submitBtn.textContent = 'Save Update';
+}
+
 function deleteTransaction(id) {
+    if (editId === id) {
+        editId = null;
+        submitBtn.textContent = 'Add Transaction';
+        formEl.reset();
+    }
     transactions = transactions.filter(t => t.id !== id);
     updateDOM();
 }
 
-// Bind standard event listener and globalize functions
-formEl.addEventListener('submit', addTransaction);
+formEl.addEventListener('submit', handleFormSubmit);
 window.deleteTransaction = deleteTransaction;
+window.editTransaction = editTransaction;
 
-// Run initial update on page load
 updateDOM();
